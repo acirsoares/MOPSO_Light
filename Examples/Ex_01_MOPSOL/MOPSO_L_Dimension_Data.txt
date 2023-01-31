@@ -1,0 +1,20 @@
+100      ! NPFS          = Number of storage positions for particles at Pareto's Front
+100     ! nPS           = Number of particles at the swarm
+100     ! NITMOPSO      = Number of MOPSO_Light iterations
+.false. ! LRandom       = Random number method (.true. = CPU time-dependent , .false. = CPU time-independent )
+2       ! NIM  = swarm particles initialization method       
+3		! NFI1_4 the number of fixed leadersheap itetarions at the first quarter
+5       ! NFI2_4 the number of fixed leadersheap itetarions at the second quarter
+8       ! NFI2_2 the number of fixed leadersheap itetarions at the second half
+0.005   ! e-dominance (positive values)
+0.005   ! e-dominance (positive values)
+
+OBS:
+
+LRandom  = .true. to run subroutine RANDOM_NRAND; .false. to run RAND(x)
+
+NIM = Code number to initialize swarm particles POSITION (P) and VELOCITY (V)  
+	(1) V=0 		P=RANDOM ; 
+	(2) V=0 		P=SOBOL;
+	(3) V=RANDOM 	P=RANDOM;
+	(4) V=RANDOM 	P=SOBOL.
