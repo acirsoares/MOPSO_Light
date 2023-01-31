@@ -12,7 +12,7 @@ It is based on the Particle Swarm Optimization algorithm adapted for multi-objec
 
 	+  Particle Velocity Calculation (Vi):  follows the original expression from Eberhart and Kennedy [REF#2] with the addition of the inertial factor $(ω)$ suggested by Chatterjee e Siarry [REF#3] to enhance the global assessment capability at the beginning and the local assessment capability at final iterations
 	
-	+ Independent Pareto Front-object to storarge the global leaders : 
+	+  Independent Pareto Front-object to storarge the global leaders : 
 
 
 # How to install
@@ -47,9 +47,11 @@ version_01 (initial version)
 
 # License and author info
 
-! @licence GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
-! @date Oct 12, 2022
-! @author Acir M. Soares Jr. <acir@ufsj.edu.br>
+ @licence GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
+
+ @date Oct 12, 2022
+
+ @author Acir M. Soares Jr. <acir@ufsj.edu.br>
 
 
 # Appendix 
