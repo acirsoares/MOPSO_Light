@@ -74,6 +74,8 @@ module ParetoFront_mod
     procedure (NonDominatedByPFS_abstract) , deferred :: NonDominatedByPFS
     procedure (PFScontains_abstract) , deferred :: PFScontains
     procedure (TrySolution_PFS_abstract) , deferred :: TrySolution_PFS
+    procedure (get_nX_abstract) , deferred :: get_nX 
+    procedure (get_nY_abstract) , deferred :: get_nY 
     procedure (get_X_abstract) , deferred :: get_X 
     procedure (get_Y_abstract) , deferred :: get_Y 
     procedure (get_P_abstract) , deferred :: get_P 
@@ -83,6 +85,20 @@ module ParetoFront_mod
 
   ! ** Interfaces 
   interface
+
+    function get_nX_abstract(PF) 
+      import :: ParetoFront_class
+      implicit none 
+      class(ParetoFront_class) :: PF
+      integer :: get_nX_abstract
+    end function get_nX_abstract
+
+    function get_nY_abstract(PF)
+      import :: ParetoFront_class
+      implicit none 
+      class(ParetoFront_class) :: PF
+      integer :: get_nY_abstract
+    end function get_nY_abstract
 
     function get_X_abstract(PF,k) result(g_X)
       use Precision_defaults_MOPSO_mod

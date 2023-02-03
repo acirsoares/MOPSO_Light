@@ -1,4 +1,4 @@
-100      ! NPFS          = Number of storage positions for particles at Pareto's Front
+80      ! NPFS          = Number of storage positions for particles at Pareto's Front
 100     ! nPS           = Number of particles at the swarm
 100     ! NITMOPSO      = Number of MOPSO_Light iterations
 .false. ! LRandom       = Random number method (.true. = CPU time-dependent , .false. = CPU time-independent )

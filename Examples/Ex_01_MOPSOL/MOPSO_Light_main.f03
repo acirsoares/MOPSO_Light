@@ -85,7 +85,7 @@ program MOPSO_Light_main
     end if     
     File_Name='MOPSOL_test1_' // trim(adjustl(file_id)) // '.csv'
     All_File_Names(i)=File_Name
-    call Save_ParetoFront_in_file(PF,nX,nY,File_Name)
+    call Save_ParetoFront_in_file(PF,File_Name)
 
   end do  
 
@@ -93,7 +93,7 @@ program MOPSO_Light_main
   ! * Merge all Pareto Fronts
   File_Name='MOPSOLight_final.csv'
   PF = ParetoFront_EDSD_class(MOPSO_Light_Parameters%NPFS,nX,nY,MOPSO_Light_Parameters%S_dominance) 
-  call Merge_ParetoFront_in_file(PF,nX,nY,NRs,All_File_Names,ALL_nTotal_particles,File_name,NTParticles)
+  call Merge_ParetoFront_in_file(PF,NRs,All_File_Names,ALL_nTotal_particles,File_name,NTParticles)
   write(*,*) "Particles in Merged Pareto Front = ",PF%get_NCSP()
 
   deallocate(ALL_nTotal_particles)
@@ -118,7 +118,7 @@ function Set_MOPSO_Light_Parameters(nY) result(MP)
   open (UNIT=30,FILE='MOPSO_L_Dimension_Data.txt')
   read(30,*)MP%NPFS              ! Number of storage positions for particles from Pareto's Front
   read(30,*)MP%nSP               ! Number of particles at the swarm
-  read(30,*)MP%NITMOPSO          ! Número de iterações do método
+  read(30,*)MP%NITMOPSO          ! Method Iterations
   read(30,*)MP%Random            ! Logical .True. or .False. to set random function
   read(30,*)MP%NIM               ! Code number to initialize swarm particles POSITION (P) and VELOCITY (V)  (1) P=RANDOM V=0; (2) P=SOBOL(max of NX=6 dimensions) V=0;(3) P=RANDOM V=RANDOM;(4) P=SOBOL V=RANDOM.
   read(30,*)MP%NFI1_4            ! Number of fixed interations on the first quarter

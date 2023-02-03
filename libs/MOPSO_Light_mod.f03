@@ -25,7 +25,7 @@
 ! *     Swarm_MOPSOL_mod.f03;
 ! *
 ! *** Initialization:
-! *     COPIAR do MAIN
+! *     
 ! *     "Parameters"%NPFS = ...              ! Number of storage positions for particles from Pareto's Front
 ! *     "Parameters"%nSP  = ...              ! Number of particles at the swarm
 ! *     "Parameters"%NITMOPSO = ...          ! Method Iterations
@@ -64,7 +64,6 @@
 !|__________________________________________________________________________________|
 
 ! ********** MOPSOLight
-
 module MOPSO_Light_mod
   use Precision_defaults_MOPSO_mod
   use ParetoFront_EDSD_mod
@@ -104,21 +103,21 @@ contains
     integer :: Nat,iNAT                            ! NAT , Number of Iteractions to keep the global leader, iNAT auxiliar index
     integer :: IqNIT,Iq1,Iq2                       ! First and second quaters of iteration
     integer :: nX,nY                               
-    real(kind=rp) :: dpL                        ! Auxiliary variable that measures the distance to the domain bound
+    real(kind=rp) :: dpL                           ! Auxiliary variable that measures the distance to the domain bound
     real(kind=rp) :: omegamin,omegamax,q,C1,C2     ! PSO Parameters
-    real(kind=rp) :: C_omega                    ! Auxiliar PSO Parameter
-    parameter (omegamin=0.4_rp)                  ! REF #Chatterjee and Siarry, 2006 [3]
-    parameter (omegamax=0.9_rp)                  ! REF #Chatterjee and Siarry, 2006 [3]
-    parameter (q=1.2_rp)                         ! REF #Chatterjee and Siarry, 2006 [3]
-    parameter (C1=2.05_rp)                       ! REF #Eberhart and Kennedy, 1995 [2]
-    parameter (C2=2.05_rp)                       ! REF #Eberhart and Kennedy, 1995 [2]
-    real(kind=rp) :: omega1                      ! PSO Parameter
-    real R1,R2                                  ! Random auxiliar variables
-    real(kind=rp) :: maVA,VA                     ! Auxiliar variables
-    logical EXCHANGE/.FALSE./                   ! Auxiliar variable
-    logical OUTDOM/.TRUE./                      ! Auxiliar variable
+    real(kind=rp) :: C_omega                       ! Auxiliar PSO Parameter
+    parameter (omegamin=0.4_rp)                    ! REF #Chatterjee and Siarry, 2006 [3]
+    parameter (omegamax=0.9_rp)                    ! REF #Chatterjee and Siarry, 2006 [3]
+    parameter (q=1.2_rp)                           ! REF #Chatterjee and Siarry, 2006 [3]
+    parameter (C1=2.05_rp)                         ! REF #Eberhart and Kennedy, 1995 [2]
+    parameter (C2=2.05_rp)                         ! REF #Eberhart and Kennedy, 1995 [2]
+    real(kind=rp) :: omega1                        ! PSO Parameter
+    real R1,R2                                     ! Random auxiliar variables
+    real(kind=rp) :: maVA,VA                       ! Auxiliar variables
+    logical EXCHANGE/.false./                      ! Auxiliar variable
+    logical OUTDOM/.true./                         ! Auxiliar variable
 
-    ! Initialize variables
+    ! Initialize dimensions variables
     nX=OF%get_nX()      
     nY=OF%get_nY()      
     ! Initializes the ParetoFront_EDSD Object
@@ -190,7 +189,7 @@ contains
         !  set a new position inside the bounds for outer particles
         do j=1,Nx
           do while (OUTDOM)
-            OUTDOM=.FALSE.
+            OUTDOM=.false.
             dpL=-SW(i)%P%X(j)+ OF%liminfX(j)
             if (dpL.GT.0) then                     ! if the particle is less than the lower bound  
               SW(i)%P%X(j)=OF%liminfX(j)+dpL/10    ! The particle dampens ten times. 
@@ -200,10 +199,10 @@ contains
             if (dpL.LT.0) then                       !  if the particle is greater than the upper bound  
               SW(i)%P%X(j)=OF%limsupX(j)+dpL/10       ! The particle dampens ten times. 
               SW(i)%Vx(j)=SW(i)%Vx(j)/10           ! The particle moves back a tenth of the distance it has moved forward out of the bound.
-              OUTDOM=.TRUE.
+              OUTDOM=.true.
             end if
           end do
-          OUTDOM=.TRUE.
+          OUTDOM=.true.
         end do
         ! Calculate the function value for particles new position
         call OF%Function_X(SW(i)%P%X,SW(i)%P%Y)
@@ -230,7 +229,7 @@ contains
                 do while (m.LE.Ny)
                   if ((SW(i)%Lb%Y(m)/SW(i)%P%Y(m)-1.0d0).GT.maVa) then   
                     m=Ny                                            
-                    EXCHANGE=.TRUE.
+                    EXCHANGE=.true.
                   end if
                   m=m+1
                 end do
@@ -240,7 +239,7 @@ contains
             if (EXCHANGE)then
               SW(i)%Lb=SW(i)%P
             else
-              EXCHANGE=.FALSE.
+              EXCHANGE=.false.
             end if
           end if
           j=j+1
@@ -259,7 +258,7 @@ contains
   real function Local_RAND(RANDOM)
     implicit none
 
-    logical,INTENT(IN) :: RANDOM
+    logical,intent(IN) :: RANDOM
 
     if (RANDOM) then
       call RANDOM_NUMBER (Local_RAND)

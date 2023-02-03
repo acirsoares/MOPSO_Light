@@ -89,6 +89,8 @@ module ParetoFront_EDSD_mod
     procedure :: NonDominatedByPFS => NonDominatedByPFS_EDSD 
     procedure :: PFScontains => PFScontains_EDSD
     procedure :: TrySolution_PFS => TrySolution_PFS_EDSD
+    procedure :: get_nX => get_nX_EDSD
+    procedure :: get_nY => get_nY_EDSD
     procedure :: get_X => get_X_EDSD
     procedure :: get_Y => get_Y_EDSD
     procedure :: get_P => get_P_EDSD
@@ -110,27 +112,27 @@ contains
 
   !C  Constructor
   !C  ** Initializes Pareto Front (PF)
-  function CONSTRUCTOR_ParetoFront_EDSD_class(Nmaxsse,Nx,Ny,S) result(PF)
+  function CONSTRUCTOR_ParetoFront_EDSD_class(Nmaxsse,nX,nY,S) result(PF)
     implicit none
     type(ParetoFront_EDSD_class) :: PF
-    integer, intent(IN) :: Nmaxsse,Nx,Ny
+    integer, intent(IN) :: Nmaxsse,nX,nY
     real(kind=rp), optional, dimension(:), intent(in) :: S 
     integer k
-    PF%Nx_EDSD=Nx
-    PF%Ny_EDSD=Ny
+    PF%nX_EDSD=Nx
+    PF%nY_EDSD=Ny
     PF%Nmaxsse_EDSD=Nmaxsse
     PF%PFSsize_EDSD=Nmaxsse+1
-    allocate (PF%S(Ny))
+    allocate (PF%S(nY))
     PF%S=0.0_rp
     if(present(S)) PF%S=S
     allocate  (PF%PFS_EDSD(PF%PFSsize_EDSD))
     do k=1,Nmaxsse
-      allocate  (PF%PFS_EDSD(k)%P%X(Nx))
-      allocate  (PF%PFS_EDSD(k)%P%Y(Ny))
+      allocate  (PF%PFS_EDSD(k)%P%X(nX))
+      allocate  (PF%PFS_EDSD(k)%P%Y(nY))
       allocate  (PF%PFS_EDSD(k+1)%d(k))
     end do
-    allocate  (PF%PFS_EDSD(PF%PFSsize_EDSD)%P%X(Nx))
-    allocate  (PF%PFS_EDSD(PF%PFSsize_EDSD)%P%Y(Ny))
+    allocate  (PF%PFS_EDSD(PF%PFSsize_EDSD)%P%X(nX))
+    allocate  (PF%PFS_EDSD(PF%PFSsize_EDSD)%P%Y(nY))
     PF%NCSP_EDSD=0
 
     return
@@ -143,6 +145,24 @@ contains
     deallocate  (PF%PFS_EDSD)
     write(*,*) "DESTRUCTOR of ParetoFront_EDSD_class WORKS OK"
   end subroutine DESTRUCTOR_ParetoFront_EDSD_class
+
+  !C  get_nX
+  !C  ** Returns the number or parameters: PF%nY_EDSD
+  function get_nX_EDSD(PF)
+    class(ParetoFront_EDSD_class) :: PF
+    integer :: get_nX_EDSD
+    get_nX_EDSD = PF%Nx_EDSD
+    return
+  end function get_nX_EDSD
+
+  !C  get_nY
+  !C  ** Returns the number or parameters: PF%nY_EDSD
+  function get_nY_EDSD(PF)
+    class(ParetoFront_EDSD_class) :: PF
+    integer :: get_nY_EDSD
+    get_nY_EDSD = PF%nY_EDSD
+    return
+  end function get_nY_EDSD
 
   !C  get_X
   !C  ** Returns vector X from element "k": PF%PFS_EDSD(k)%P%X
@@ -337,9 +357,7 @@ contains
     !  Calculates the Euclidian distances from the new point to
     !  each point in the Pareto Front
     do i = 1,PF%NCSP_EDSD-1
-!          write(*,*)"Ok i=",i,PF%NCSP_EDSD        
       PF%PFS_EDSD(PF%NCSP_EDSD)%d(i)=0.0d0
-!          write(*,*)"Ok i=",i  
       do j = 1,PF%NY_EDSD
         PF%PFS_EDSD(PF%NCSP_EDSD)%d(i)=PF%PFS_EDSD(PF%NCSP_EDSD)%d(i)+((PF%PFS_EDSD(PF%NCSP_EDSD)%P%Y(j)-PF%PFS_EDSD(i)%P%Y(j)))**2
       end do
