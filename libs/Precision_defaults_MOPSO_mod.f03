@@ -1,7 +1,7 @@
 ! @licence GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 ! @date Oct 12, 2022
 ! @author Acir M. Soares Jr. <acir@ufsj.edu.br>
-! @def :  MOPSOL = MOPSO_Light algorithm
+! @def :  MOPSO_precision_defaults_mod for MOPSO algorithms
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! ***************************************************************************************
 ! *** MOPSO_precision_defaults_mod.f03 (Version 1.0)  

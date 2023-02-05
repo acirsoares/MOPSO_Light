@@ -1,14 +1,14 @@
 ! @licence GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 ! @date Oct 12, 2022
 ! @author Acir M. Soares Jr. <acir@ufsj.edu.br>
-! @def :  Pareto Front - Class (general)
+! @def :  Pareto Front - Class (general) 
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! ***************************************************************************************
 ! *** ParetoFront_mod - Class, abstract (Version 1.0)
 ! ***************************************************************************************
 ! *** Object Description:
-! * An objetc to store a set of Single Pareto Elements (SPE) 
-! * Contains specific managing procedures to get, compare, add, 
+! * An objetc to store a set of Single Pareto Elements (SPE) that 
+! * contains specific managing procedures to get, compare, add, sort 
 ! * and eliminate its elements.
 ! *
 ! *** Variables and Parameters: 
@@ -17,14 +17,14 @@
 ! *- nY = the Number of objective functions
 ! *- X = an array of parameters 
 ! *- Y = an array of parameters 
-! *- P = an SPE_ParetoFront_type  ! see module ParetoFront_Structures_mod
+! *- P = an SPE_ParetoFront_type (X and Y) ! see module ParetoFront_Structures_mod
 ! *- NCSP = The current number of stored solutions in Pareto Front
 ! *
 ! *** External Functions / Subroutines (Public)
 ! *- Function - NonDominatedByPFS (Y) -> Logical  : tests if an element Y is nondominated by the Pareto Front Elements 
 ! *- Function - PFScontains (Y) -> Logical   : tests if the Pareto Front Set contains the element Y
 ! *- Subroutine - Try_Solution_PFS (P)    :  If a point P(X,Y) is nondominated by the Pareto Front then the Pareto 
-! *    Front receives it and may eliminate one or more points whether the new entrance dominates it.    
+! *    Front receives it and may eliminate one or more points whether the new entrance dominates them.    
 ! *- OrdenatePFS (i)  :  orders its elements according to the objective function "i" values.
 ! *- Function get_X (k) -> Objct%P(k)%X 
 ! *- Function get_Y (k) -> Objct%P(k)%Y
@@ -36,11 +36,10 @@
 ! ***************************************************************************************
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-! ** Module Structures: sets the basic type for Paretro front elements
+! ** Module Structures: sets the basic type for Pareto front elements
 ! ** TYPE Single Pareto Element (SPE) 
 module ParetoFront_Structures_mod
   use Precision_defaults_MOPSO_mod
-
   implicit none
 
   private 

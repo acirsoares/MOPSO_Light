@@ -1,15 +1,15 @@
 ! @licence GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 ! @date Oct 12, 2022
 ! @author Acir M. Soares Jr. <acir@ufsj.edu.br>
-! @def :  MOPSOL = MOPSO_Light algorithm
+! @def :  MOPSO_Light: multi-objective optimization algorithm based on PSO (Particle Swarm Optimization)
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! ***************************************************************************************
 ! *** MOPSOLight_mod.f03 (Version 1.0)  
 ! ***************************************************************************************
 ! *** Algorithm Application:
-! *     MOPSOLight returns a Pareto Multidimensional Front through the application of the 
-! *      PSO algorithm adapted for multi-objective minimization problems.
-! *** Main features MOPSO_Light                                                       
+! *     MOPSO_Light returns a Pareto Multidimensional Front applying the PSO 
+! *      algorithm adapted for multi-objective optimization problems.
+! *** Main MOPSO_Light features                                                       
 ! *      - Uses ParetoFront_EDSD_mod based on Euclidean distance to store and manage
 ! *         the Pareto Front                          
 ! *      - Global Leadership fixed for N=3 to 8 iterations
@@ -82,9 +82,9 @@ module MOPSO_Light_mod
     integer :: NITMOPSO                   ! The number of MOPSO cycles 
     logical :: Random                     ! Random procedure: .true. = Random_Number() .false. = RAND()
     integer :: NIM                        ! Code number to initialize the swarm
-    integer :: NFI1_4                     ! number of fixed iterations at the first quarter.
-    integer :: NFI2_4                     ! number of fixed iterations at the second quarter.
-    integer :: NFI2_2                     ! number of fixed iterations at the second half.
+    integer :: NFI1_4                     ! number of fixed iterations in the first quarter.
+    integer :: NFI2_4                     ! number of fixed iterations in the second quarter.
+    integer :: NFI2_2                     ! number of fixed iterations in the second half.
     real(kind=rp), allocatable :: S_dominance(:)           ! Dominance Criteria
   end type MOPSO_Light_Parameters_type
 
@@ -98,79 +98,86 @@ contains
     type(ParetoFront_EDSD_class),optional, intent(in)  :: PFin
     type(ParetoFront_EDSD_class) :: PF
     ! ** MOPSO_Light algorithm variables
-    type(Swarm_MOPSO_type), allocatable :: SW (:)  ! Particle Swarm  with NPE particles
+    type(Swarm_MOPSO_type), allocatable :: SW (:)  ! Particle Swarm  with nSP particles
     integer :: i,j,k,L,m
-    integer :: Nat,iNAT                            ! NAT , Number of Iteractions to keep the global leader, iNAT auxiliar index
-    integer :: IqNIT,Iq1,Iq2                       ! First and second quaters of iteration
+    integer :: Nat,iNAT                            ! NAT , Number of iterations to keep the global leader fixed, iNAT auxiliar index
+    integer :: IqNIT,Iq1,Iq2                       ! First and second quarters of iterative process
     integer :: nX,nY                               
-    real(kind=rp) :: dpL                           ! Auxiliary variable that measures the distance to the domain bound
+    real(kind=rp) :: dpL                           ! An auxiliary variable that measures the distance to the domain bound
     real(kind=rp) :: omegamin,omegamax,q,C1,C2     ! PSO Parameters
-    real(kind=rp) :: C_omega                       ! Auxiliar PSO Parameter
+    real(kind=rp) :: C_omega                       ! The auxiliar PSO Parameter
     parameter (omegamin=0.4_rp)                    ! REF #Chatterjee and Siarry, 2006 [3]
     parameter (omegamax=0.9_rp)                    ! REF #Chatterjee and Siarry, 2006 [3]
     parameter (q=1.2_rp)                           ! REF #Chatterjee and Siarry, 2006 [3]
     parameter (C1=2.05_rp)                         ! REF #Eberhart and Kennedy, 1995 [2]
     parameter (C2=2.05_rp)                         ! REF #Eberhart and Kennedy, 1995 [2]
     real(kind=rp) :: omega1                        ! PSO Parameter
-    real R1,R2                                     ! Random auxiliar variables
-    real(kind=rp) :: maVA,VA                       ! Auxiliar variables
-    logical EXCHANGE/.false./                      ! Auxiliar variable
-    logical OUTDOM/.true./                         ! Auxiliar variable
+    real R1,R2                                     ! The Random auxiliar variables
+    real(kind=rp) :: maVA,VA                       ! Auxiliary variables
+    logical EXCHANGE/.false./                      ! Auxiliary variable
+    logical OUTDOM/.true./                         ! Auxiliary variable
 
     ! Initialize dimensions variables
     nX=OF%get_nX()      
     nY=OF%get_nY()      
+
     ! Initializes the ParetoFront_EDSD Object
     if (present(PFin))then
       PF=PFin
     else
-      ! Check the Dominance Criteria  
       if ((allocated(MLP%S_dominance))) then
         PF=ParetoFront_EDSD_class(MLP%NPFS,nX,nY,MLP%S_dominance)
       else
         PF=ParetoFront_EDSD_class(MLP%NPFS,nX,nY)
       end if  
     end if
+    
     ! Initialize the Swarm "SW" 
     SW = New_Swarm(OF,PF,MLP%nSP,nx,ny,MLP%NIM,MLP%Random)
 
     ! MOPSO_Light_algorithm
-    ! Set the number of iterations before updating the leader at the first iterations quarter
+    ! Set the number of iterations before updating the leader in the first quarter
     NAT=MLP%NFI1_4      
-    ! Set the end of the first and the second quarter of iterations      
+
+    ! Set the end of the first and the end of the second quarter of the iterative process      
     iNAT=NAT                
     IqNIT=INT(MLP%NITMOPSO/4)        
     Iq1=1+MLP%NITMOPSO-3*IqNIT  
     Iq2=1+MLP%NITMOPSO-2*IqNIT  
+
     ! Calculate the constant part of the inertia factor (Omega)
     C_omega = (omegamax-omegamin) / (MLP%NITMOPSO**q)  
 
-    write(*,*)" Initialize                                SW com ",PF%get_NCSP()
+    write(*,*)" Number of non-dominated particles in the initial swarm SW  =  ",PF%get_NCSP()
+    
     ! Iterative procedure
     do k=1,MLP%NITMOPSO
-      ! After a quater iterations, set a new number of iterations before updating the leader at the first iterations quarter
+      ! After a quater of the total cycles, set a new number of iterations before updating the leader in the second quarter of the iterative process
       if (K.eq.Iq1) then  
         NAT=MLP%NFI2_4     
-        write (*,*) "first quarter / second quarter" , k ,"SW com  ",PF%get_NCSP()
+        write (*,*) "first quarter / second quarter cycles =" , k ,"number of particles in Pareto Front = ",PF%get_NCSP()
       end if 
-      ! After the second quater iterations, set a new number of iterations before updating the leader at the first iterations quarter
+      ! After the second quater of the total cycles, set a new number of iterations before updating the leader in the second half of the iterative process
       if (K.eq.Iq2) then    
         NAT=MLP%NFI2_2
         iNAT=NAT-mod((MLP%NITMOPSO-K),NAT)-1     
-        write (*,*) "second quarter / first half   " , k , "SW com  ",PF%get_NCSP()
+        write (*,*) "second quarter / first half cycles =" , k , "number of particles in Pareto Front = ",PF%get_NCSP()
       end if 
+
       ! Calculate the inertia Factor REF #Chatterjee and Siarry, 2006 [3]       
       omega1=omegamin+C_omega*((MLP%NITMOPSO-K)**q)
+
       ! Set the global best (leader) "Gb" each 3 to 8 iterations
       if(iNAT.GE.NAT) then
         iNAT=0
- !       WRITE(*,*)K
+        R1=Local_RAND(MLP%Random)
         j=INT(PF%get_NCSP()*R1)  ! Random selection of an initial particle 
         do i=1,MLP%nSP
           SW(i)%Gb=PF%get_X(PF%get_NCSP()-MOD(i+j,PF%get_NCSP()))   ! sequential selection of the global leader
         end do
       end if
       iNat=iNat+1
+      
       ! Calculate particles X-velocities
       do i=1,MLP%nSP
         do j=1,Nx
@@ -181,10 +188,13 @@ contains
           R2*C2*(SW(i)%Gb(j)-SW(i)%P%x(j)) )
         end do
       end do
-      ! Update swarm      
+
+      ! Update swarm position informations      
       do i=1,MLP%nSP
+
         ! Update particles position     
         SW(i)%P%X=SW(i)%P%X+SW(i)%Vx
+
         ! Check if the new position is out of bounds and
         !  set a new position inside the bounds for outer particles
         do j=1,Nx
@@ -204,8 +214,10 @@ contains
           end do
           OUTDOM=.true.
         end do
+        
         ! Calculate the function value for particles new position
         call OF%Function_X(SW(i)%P%X,SW(i)%P%Y)
+
         ! Update particle's "best position"    
         j=1
         do while (j.LE.Ny)
@@ -244,11 +256,12 @@ contains
           end if
           j=j+1
         end do
-      end do
-      ! Try to insert Particles into the Pareto Front 
-      do i=1,MLP%nSP
+
+        ! Try to insert Particles into the Pareto Front 
         call PF%TrySolution_PFS(SW(i)%P)
+
       end do
+
     end do  
 
     return

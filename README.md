@@ -40,6 +40,9 @@ run the python script to plot the results in files MOPSOL_test1_$i.csv ($i = 01,
 
 	python3 test1_2D_Plot.py 
 
+OBS:
+	The MOPSO_Light parameters are set in file MOPSO_Light_Parameters.txt 
+
 
 # Change log
 

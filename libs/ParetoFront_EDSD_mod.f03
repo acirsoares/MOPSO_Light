@@ -1,7 +1,7 @@
 ! @licence GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 ! @date Oct 12, 2022
 ! @author Acir M. Soares Jr. <acir@ufsj.edu.br>
-! @def :  ParetoFront_EDSD_mod - Class (general)
+! @def :  ParetoFront_EDSD_mod - Class (general) for MOPSO_Light algorithm
 !
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! ***************************************************************************************
@@ -29,7 +29,6 @@
 ! *** External Functions / Subroutines (Public)
 ! *- Constructor
 ! *- Destructor
-! *- Function - NonDominatedByPFS (Y,s) -> Logical  : tests if an element Y is nondominated by the Pareto Front Elements 
 ! *- Function - PFScontains (Y) -> Logical   : tests if the Pareto Front Set contains the element Y
 ! *- Subroutine - Try_Solution_PFS (P)    :  If a point P(X,Y) is nondominated by the Pareto Front then the Pareto 
 ! *    Front receives it and may eliminate one or more points whether the new entrance dominates it.    
@@ -39,6 +38,20 @@
 ! *- get_P (k) -> Objct%P(k)
 ! *- get_P_Y (k,j) -> Objct%P(k)%Y(j)
 ! *- get_NCSP -> Objct%NCSP
+! *- Sort_PFS => Sort_PFS_EDSD
+! *- NonDominatedByPFS => NonDominatedByPFS_EDSD (Y,s) -> Logical  : tests if an element Y is nondominated 
+! *    by the Pareto Front Elements
+! *- PFScontains => PFScontains_EDSD(Y) -> Logical  : tests if the Pareto Front Set contains the element Y
+! *- TrySolution_PFS => TrySolution_PFS_EDSD (P)  :  If a point P(X,Y) is nondominated by the Pareto Front then
+! *    the Pareto Front receives it and may eliminate one or more points whether the new entrance dominates it.
+! *- get_nX => get_nX_EDSD
+! *- get_nY => get_nY_EDSD
+! *- get_X => get_X_EDSD
+! *- get_Y => get_Y_EDSD
+! *- get_P => get_P_EDSD
+! *- get_P_y => get_P_y_EDSD
+! *- get_NCSP => get_NCSP_EDSD
+! *- Set_S_dominanceCriteria 
 ! *
 ! *** Internal Functions / Subroutines (Privet)
 ! *- Subroutine - InsertPointIntoPFS_EDSD (P) 
@@ -52,7 +65,6 @@
 module ParetoFront_EDSD_mod
   use Precision_defaults_MOPSO_mod ! real(kind=rp)
   use ParetoFront_mod ! Contains the abstract class ParetoFront
-
   implicit none
 
   private 
@@ -82,8 +94,8 @@ module ParetoFront_EDSD_mod
     integer, private :: NY_EDSD  !  Number of functions
     real(kind=rp), private, allocatable :: S(:) 
 
-
   contains
+
     ! ** Class procedures
     procedure :: Sort_PFS => Sort_PFS_EDSD
     procedure :: NonDominatedByPFS => NonDominatedByPFS_EDSD 
@@ -100,6 +112,7 @@ module ParetoFront_EDSD_mod
     procedure, private :: ExchangePositionPFS_EDSD 
     procedure, private :: InsertPointIntoPFS_EDSD
     final :: DESTRUCTOR_ParetoFront_EDSD_class 
+
   end type ParetoFront_EDSD_class  
 
   ! ** Module Interfaces 
@@ -107,17 +120,19 @@ module ParetoFront_EDSD_mod
     module procedure CONSTRUCTOR_ParetoFront_EDSD_class
   end interface ParetoFront_EDSD_class  
 
-  ! ** Module procedures
+! ** Module procedures
 contains  
 
-  !C  Constructor
-  !C  ** Initializes Pareto Front (PF)
+  ! ** Constructor
+  !   Initializes Pareto Front (PF)
   function CONSTRUCTOR_ParetoFront_EDSD_class(Nmaxsse,nX,nY,S) result(PF)
     implicit none
+
     type(ParetoFront_EDSD_class) :: PF
     integer, intent(IN) :: Nmaxsse,nX,nY
     real(kind=rp), optional, dimension(:), intent(in) :: S 
     integer k
+
     PF%nX_EDSD=Nx
     PF%nY_EDSD=Ny
     PF%Nmaxsse_EDSD=Nmaxsse
@@ -138,105 +153,141 @@ contains
     return
   end function CONSTRUCTOR_ParetoFront_EDSD_class
 
-  !C  Destructor
-  !C  ** Destructs the Pareto Front (PF)
+  ! ** Destructor
+  !   Destructs the Pareto Front (PF)
   subroutine DESTRUCTOR_ParetoFront_EDSD_class(PF)
+    implicit none
+
     type(ParetoFront_EDSD_class) :: PF
+
     deallocate  (PF%PFS_EDSD)
-    write(*,*) "DESTRUCTOR of ParetoFront_EDSD_class WORKS OK"
+
+    return
   end subroutine DESTRUCTOR_ParetoFront_EDSD_class
 
-  !C  get_nX
-  !C  ** Returns the number or parameters: PF%nY_EDSD
+  ! ** get_nX
+  !   Returns the number or parameters: PF%nY_EDSD
   function get_nX_EDSD(PF)
+    implicit none
+
     class(ParetoFront_EDSD_class) :: PF
     integer :: get_nX_EDSD
+
     get_nX_EDSD = PF%Nx_EDSD
+
     return
   end function get_nX_EDSD
 
-  !C  get_nY
-  !C  ** Returns the number or parameters: PF%nY_EDSD
+  ! ** get_nY
+  !   Returns the number or parameters: PF%nY_EDSD
   function get_nY_EDSD(PF)
+    implicit none
+
     class(ParetoFront_EDSD_class) :: PF
     integer :: get_nY_EDSD
+
     get_nY_EDSD = PF%nY_EDSD
+
     return
   end function get_nY_EDSD
 
-  !C  get_X
-  !C  ** Returns vector X from element "k": PF%PFS_EDSD(k)%P%X
+  ! ** get_X
+  !   Returns vector X from element "k": PF%PFS_EDSD(k)%P%X
   function get_X_EDSD(PF,k) RESULT(g_X)
+    implicit none
+
     class(ParetoFront_EDSD_class) :: PF
     integer, INTENT(IN) :: k
     real(kind=rp), allocatable ::  g_X(:)    
+
     allocate  (g_X(PF%Nx_EDSD))
     g_X = PF%PFS_EDSD(k)%P%X
+
     return
   end function get_X_EDSD
 
-  !C  get_Y
-  !C  ** Returns vector Y from element "k": PF%PFS_EDSD(i)%P%Y
+  ! ** get_Y
+  !   Returns vector Y from element "k": PF%PFS_EDSD(i)%P%Y
   function get_Y_EDSD(PF,k) RESULT(g_Y)
+    implicit none
+
     class(ParetoFront_EDSD_class) :: PF
     integer, INTENT(IN) :: k
     real(kind=rp), allocatable ::  g_Y(:)     
+
     allocate  (g_Y(PF%Ny_EDSD))
     g_Y = PF%PFS_EDSD(k)%P%Y
+
     return
   end function get_Y_EDSD
 
-  !C  get_P
-  !C  ** Returns the single Pareto element "k": PF%PFS_EDSD(k)%P
+  ! ** get_P
+  !   Returns the single Pareto element "k": PF%PFS_EDSD(k)%P
   function get_P_EDSD(PF,k) RESULT(g_P)
+    implicit none
+
     class(ParetoFront_EDSD_class) :: PF
     integer, INTENT(IN) :: k
     type (SPE_ParetoFront_type) ::  g_P    
+
     allocate  (g_P%X(PF%Nx_EDSD))
     allocate  (g_P%Y(PF%Ny_EDSD))
     g_P = PF%PFS_EDSD(k)%P
+
     return
   end function get_P_EDSD
 
-  !C  get_NCSP
-  !C  ** Returns the current number of elements in Pareto front: PF%NCSP_EDSD
+  ! ** get_NCSP
+  !   Returns the current number of elements in Pareto front: PF%NCSP_EDSD
   function get_NCSP_EDSD(PF) 
+    implicit none
+
     class(ParetoFront_EDSD_class) :: PF
     integer get_NCSP_EDSD
+
     get_NCSP_EDSD = PF%NCSP_EDSD
+
     return
   end function get_NCSP_EDSD
 
-  !C  get_P_Y
-  !C  ** Returns vector Y from element "k": PF%PFS_EDSD(i)%P%Y 
-    function get_P_Y_EDSD(PF,k,j) 
+  ! ** get_P_Y
+  !   Returns vector Y from element "k": PF%PFS_EDSD(i)%P%Y 
+  function get_P_Y_EDSD(PF,k,j) 
+    implicit none
+
     class(ParetoFront_EDSD_class) :: PF
     integer, INTENT(IN) :: k,j
     real(kind=rp) get_P_Y_EDSD
+
     get_P_Y_EDSD = PF%PFS_EDSD(k)%P%Y(j)
+
     return
   end function get_P_Y_EDSD
 
-  !C  Set_S_dominanceCriteria value
-  !C  ** Sets the S_dominance criteria
+  ! ** Set_S_dominanceCriteria value
+  !   Sets the S_dominance criteria
   subroutine Set_S_dominanceCriteria(PF,S)
     implicit none
+
     class (ParetoFront_EDSD_class) :: PF
     real(kind=rp), dimension(:), intent(in) :: S 
+
     PF%S=S
+
     return
   end subroutine Set_S_dominanceCriteria
 
-  !C  ExchangePositionPFS_EDSD
-  !C  ** Exchange the position i with j of Pareto Front Elements
+  ! ** ExchangePositionPFS_EDSD
+  !   Exchange the position i with j of Pareto Front Elements
   subroutine ExchangePositionPFS_EDSD(PF,i,j)
     implicit none
+
     class (ParetoFront_EDSD_class) :: PF
     integer, INTENT (IN) :: i,j
     integer k
 
+    ! Copy particle "i" into the last position + 1
     PF%PFS_EDSD(PF%NCSP_EDSD+1)%P=PF%PFS_EDSD(i)%P
-
     do k = 1,i-1     ! updates the "i" line from "d" matrix
       PF%PFS_EDSD(PF%NCSP_EDSD+1)%d(k)=PF%PFS_EDSD(i)%d(k)
     end do
@@ -244,8 +295,8 @@ contains
       PF%PFS_EDSD(PF%NCSP_EDSD+1)%d(K)=PF%PFS_EDSD(k)%d(i)
     end do
 
+    ! Copy particle "j" into particle "i"
     PF%PFS_EDSD(i)%P=PF%PFS_EDSD(j)%P
-
     do k = 1,i-1     ! updates the "i" line from "d" matrix
       PF%PFS_EDSD(i)%d(k)=PF%PFS_EDSD(j)%d(k)
     end do
@@ -253,6 +304,7 @@ contains
       PF%PFS_EDSD(k)%d(i)=PF%PFS_EDSD(j)%d(K)
     end do
 
+    ! Copy particle "i" in the last position + 1 into particle "j"
     PF%PFS_EDSD(j)%P=PF%PFS_EDSD(PF%NCSP_EDSD+1)%P     ! replace the point
     do k = 1,j-1     ! updates the "i" line from "d" matrix
       PF%PFS_EDSD(j)%d(k)=PF%PFS_EDSD(PF%NCSP_EDSD+1)%d(k)
@@ -260,17 +312,20 @@ contains
     do k = j+1,PF%NCSP_EDSD-1   ! updates the "i" column from "d" matrix
       PF%PFS_EDSD(k)%d(j)=PF%PFS_EDSD(PF%NCSP_EDSD+1)%d(K)
     end do
+
     return
   end subroutine ExchangePositionPFS_EDSD
 
-  !C  OrdenatePFS
-  !C  ** Sort the Pareto front elements in ascending order (SelectionSort) 
-  !C  according to the function "j" value.
+  ! ** OrdenatePFS
+  !   Sort the Pareto front elements in ascending order (SelectionSort) 
+  !   according to the function "j" value.
   subroutine Sort_PFS_EDSD(PF,j)
     implicit none
+
     class (ParetoFront_EDSD_class), intent (inout) :: PF
     integer, INTENT(IN) :: j
     integer i,k,lower
+
     do i = 1,PF%NCSP_EDSD-1
       lower=i
       do k=i+1,PF%NCSP_EDSD
@@ -278,16 +333,19 @@ contains
       end do
       if (lower.NE.i) CALL PF%ExchangePositionPFS_EDSD(i,lower)      
     end do
+
     return
   end subroutine Sort_PFS_EDSD
 
-  !C  NonDominatedByPFS
-  !C  ** Test if a particle Y is non_S-dominated by the Pareto Front (PF)
+  ! ** NonDominatedByPFS
+  !   Test if a particle Y is non_S-dominated by the Pareto Front (PF)
   logical function NonDominatedByPFS_EDSD (PF,Y)       
     implicit none
+
     class (ParetoFront_EDSD_class) :: PF
     real(kind=rp), dimension(:), intent(in) :: Y  
     integer i,j
+
     NonDominatedByPFS_EDSD=.TRUE.                       
     do i= 1,PF%NCSP_EDSD
       do j = 1,PF%NY_EDSD
@@ -297,16 +355,19 @@ contains
       return     
 40    continue
     end do
+
     return
   end function NonDominatedByPFS_EDSD
 
-  !C  PFScontains
-  !C  ** Tests if PFS contains the particle Y
+  ! ** PFScontains
+  !   Tests if PFS contains the particle Y
   logical function PFScontains_EDSD (PF,Y)       
     implicit none
+
     class (ParetoFront_EDSD_class) :: PF
     real(kind=rp), DIMENSION(:), intent(in) :: Y 
     integer i,j                                    
+
     PFScontains_EDSD=.FALSE.                  
     do i= 1,PF%NCSP_EDSD
       do j = 1,PF%NY_EDSD
@@ -316,15 +377,17 @@ contains
       return              
 40    continue
     end do
+
     return
   end function PFScontains_EDSD
 
-  !C  InsertParticleIntoPFS
-  !C  ** Insert the point "P" into Pareto Front with a "S" dominance criteria
-  !C  ** If the number of Points exceeds Nmaxsse, it eliminates the   
-  !C  ** particle with the lowest Euclidian Distance.            
+  ! ** InsertParticleIntoPFS
+  !   Insert the point "P" into Pareto Front with a "S" dominance criteria
+  !   If the number of Points exceeds Nmaxsse, it eliminates the   
+  !   particle with the lowest Euclidian Distance.            
   subroutine InsertPointIntoPFS_EDSD (PF,P)
     implicit none
+
     class (ParetoFront_EDSD_class) :: PF
     type(SPE_ParetoFront_type), intent(in) :: P  ! the new point
     integer i,ia,ie,j,k,je
@@ -366,85 +429,88 @@ contains
     ! Tests if the Pareto Front is full. If true it eliminates  
     ! the point with the small Euclidian Distance.
     if (PF%NCSP_EDSD.EQ.PF%PFSsize_EDSD) then
-    ! Finds the minimum distance
-    PF%minD%L=2
-    PF%minD%C=1
-    do i=3,PF%NCSP_EDSD
-      do j=1,i-1
-        if(PF%PFS_EDSD(i)%d(j).LT.PF%PFS_EDSD(PF%minD%L)%d(PF%minD%C))THEN
-          PF%minD%L=i
-          PF%minD%C=j
-        end if
+      ! Finds the minimum distance
+      PF%minD%L=2
+      PF%minD%C=1
+      do i=3,PF%NCSP_EDSD
+        do j=1,i-1
+          if(PF%PFS_EDSD(i)%d(j).LT.PF%PFS_EDSD(PF%minD%L)%d(PF%minD%C))THEN
+            PF%minD%L=i
+            PF%minD%C=j
+          end if
+        end do
       end do
-    end do
-    !  Selects the particle with the second lowest distance
-    je=PF%minD%L    ! je corresponds to the point to be eliminated
-    if(PF%minD%C.EQ.1)THEN
-      if(PF%minD%L.EQ.2)THEN
-        smd=PF%PFS_EDSD(3)%d(1)      
-        do i=4,PF%NCSP_EDSD          
-          if (PF%PFS_EDSD(i)%d(1).LT.smd) smd=PF%PFS_EDSD(i)%d(1)
-        end do
-        do i=3,PF%NCSP_EDSD          
-          if (PF%PFS_EDSD(i)%d(2).LT.smd) GOTO 60
-        end do
+      !  Selects the particle with the second lowest distance
+      je=PF%minD%L    ! je corresponds to the point to be eliminated
+      if(PF%minD%C.EQ.1)THEN
+        if(PF%minD%L.EQ.2)THEN
+          smd=PF%PFS_EDSD(3)%d(1)      
+          do i=4,PF%NCSP_EDSD          
+            if (PF%PFS_EDSD(i)%d(1).LT.smd) smd=PF%PFS_EDSD(i)%d(1)
+          end do
+          do i=3,PF%NCSP_EDSD          
+            if (PF%PFS_EDSD(i)%d(2).LT.smd) GOTO 60
+          end do
+        else
+          smd=PF%PFS_EDSD(2)%d(1)      
+          do i=3,PF%minD%L-1      
+            if (PF%PFS_EDSD(i)%d(1).LT.smd) smd=PF%PFS_EDSD(i)%d(1)
+          end do
+          do i=PF%minD%L+1,PF%NCSP_EDSD   
+            if (PF%PFS_EDSD(i)%d(1).LT.smd) smd=PF%PFS_EDSD(i)%d(1)
+          end do
+          do i=2,PF%minD%L-1      
+            if (PF%PFS_EDSD(PF%minD%L)%d(i).LT.smd) GOTO 60
+          end do
+          do i=PF%minD%L+1,PF%NCSP_EDSD
+            if (PF%PFS_EDSD(i)%d(PF%minD%L).LT.smd) GOTO 60
+          end do
+        end if
       else
-        smd=PF%PFS_EDSD(2)%d(1)      
-        do i=3,PF%minD%L-1      
-          if (PF%PFS_EDSD(i)%d(1).LT.smd) smd=PF%PFS_EDSD(i)%d(1)
+        smd=PF%PFS_EDSD(PF%minD%C)%d(1)    
+        do i=2,PF%minD%C-1         
+         if (PF%PFS_EDSD(PF%minD%C)%d(i).LT.smd) smd=PF%PFS_EDSD(PF%minD%C)%d(i)
         end do
-        do i=PF%minD%L+1,PF%NCSP_EDSD   
-          if (PF%PFS_EDSD(i)%d(1).LT.smd) smd=PF%PFS_EDSD(i)%d(1)
+        do i=PF%minD%C+1,PF%NCSP_EDSD     
+          if (PF%PFS_EDSD(i)%d(PF%minD%C).LT.smd) smd=PF%PFS_EDSD(i)%d(PF%minD%C)
         end do
-        do i=2,PF%minD%L-1      
+        do i=1,PF%minD%L-1         
           if (PF%PFS_EDSD(PF%minD%L)%d(i).LT.smd) GOTO 60
         end do
-        do i=PF%minD%L+1,PF%NCSP_EDSD
+        do i=PF%minD%L+1,PF%NCSP_EDSD     
           if (PF%PFS_EDSD(i)%d(PF%minD%L).LT.smd) GOTO 60
         end do
       end if
-    else
-      smd=PF%PFS_EDSD(PF%minD%C)%d(1)    
-      do i=2,PF%minD%C-1         
-        if (PF%PFS_EDSD(PF%minD%C)%d(i).LT.smd) smd=PF%PFS_EDSD(PF%minD%C)%d(i)
+      je=PF%minD%C     
+60    continue
+      !Eliminates the selected point and updates the matrix "d"
+      PF%PFS_EDSD(je)%P=PF%PFS_EDSD(PF%NCSP_EDSD)%P                     
+      do k = 1,je-1                               
+        PF%PFS_EDSD(je)%d(k)=PF%PFS_EDSD(PF%NCSP_EDSD)%d(k)
       end do
-      do i=PF%minD%C+1,PF%NCSP_EDSD     
-        if (PF%PFS_EDSD(i)%d(PF%minD%C).LT.smd) smd=PF%PFS_EDSD(i)%d(PF%minD%C)
+      do k = je+1,PF%NCSP_EDSD-1                        
+        PF%PFS_EDSD(k)%d(je)=PF%PFS_EDSD(PF%NCSP_EDSD)%d(k)
       end do
-      do i=1,PF%minD%L-1         
-        if (PF%PFS_EDSD(PF%minD%L)%d(i).LT.smd) GOTO 60
-      end do
-      do i=PF%minD%L+1,PF%NCSP_EDSD     
-        if (PF%PFS_EDSD(i)%d(PF%minD%L).LT.smd) GOTO 60
-      end do
+        PF%NCSP_EDSD=PF%NCSP_EDSD-1
     end if
-    je=PF%minD%C     
-60  continue
-    !Eliminates the selected point and updates the matrix "d"
-    PF%PFS_EDSD(je)%P=PF%PFS_EDSD(PF%NCSP_EDSD)%P                     
-    do k = 1,je-1                               
-      PF%PFS_EDSD(je)%d(k)=PF%PFS_EDSD(PF%NCSP_EDSD)%d(k)
-    end do
-    do k = je+1,PF%NCSP_EDSD-1                        
-      PF%PFS_EDSD(k)%d(je)=PF%PFS_EDSD(PF%NCSP_EDSD)%d(k)
-    end do
-      PF%NCSP_EDSD=PF%NCSP_EDSD-1
-    end if
+
     return
   end subroutine InsertPointIntoPFS_EDSD
 
-  !C  TrySolution_PFS
-  !C  ** Tests if a point with solution Y is Non-Dominated By PFS,
-  !C  and if .true., it tries to insert the point into Parteto Front.
+  ! ** TrySolution_PFS
+  !   Tests if a point with solution Y is Non-Dominated By PFS,
+  !   and if .true., it tries to insert the point into Parteto Front.
   subroutine TrySolution_PFS_EDSD (PF,P)       
     implicit none
+
     class (ParetoFront_EDSD_class) :: PF
     type(SPE_ParetoFront_type), intent(in) :: P  
+
     if ( PF%NonDominatedByPFS(P%Y) ) THEN 
       call PF%InsertPointIntoPFS_EDSD(P)               
     end if
+
     return
   end subroutine TrySolution_PFS_EDSD
 
 end module ParetoFront_EDSD_mod
-

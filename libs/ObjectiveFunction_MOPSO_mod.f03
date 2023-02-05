@@ -1,15 +1,15 @@
 ! @licence GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 ! @date Oct 12, 2022
 ! @author Acir M. Soares Jr. <acir@ufsj.edu.br>
-! @def :  ObjectiveFunction_MOPSOL - Class (abstract)
+! @def :  ObjectiveFunction_MOPSO - Class (abstract) for MOPSO algorithms
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !*****************************************************************************************
 !*** ObjectiveFunction_MOPSOL_mod - Class(abstract) (Version 1.0)
 !*****************************************************************************************
 ! *** Object Description:
 ! *     A parent abstract object to set an objective function R(n) in R(n).
-! *     It recieves a vector with Real variable values (X) with a set of limit 
-! *     values (min,max) and returs a vector with the Real functions values (Y)
+! *     It receives a vector with Real variable values (X) with a set of limits 
+! *     values (min, max) and returns a vector with the Real functions values (Y)
 ! *
 ! *** Initialization:
 ! *     use ObjectiveFunction_MOPSOL_mod              ! Parent Type mode
@@ -17,9 +17,9 @@
 ! *     type, public, extends(ObjectiveFunction_MOPSO_Class)::::"OF_NAME"    ! Child Type
 ! *     contains
 ! *         procedure ::Function_X
-! *     end type OF_test1_Class
+! *     end type "OF_NAME"
 ! *** Variables and Parameters: 
-! *    -     limsupX(:) , liminfX(:) ! Domain limits to Objective Function
+! *    -     limsupX(:) , liminfX(:) ! Domain limits to the Objective Function
 ! *    integer nX ! Number of variables
 ! *    integer nY ! Number of functions
 ! *
@@ -31,10 +31,13 @@
 module ObjectiveFunction_MOPSO_mod
   use Precision_defaults_MOPSO_mod ! real(kind=rp)
   implicit none
-! ** Module Objects / Variables / Procedures 
+
+  ! ** Module Objects / Variables / Procedures 
   private 
+
   public ObjectiveFunction_MOPSO_Class
-! ** Object_Class definition
+
+  ! ** Object_Class definition
   type, abstract :: ObjectiveFunction_MOPSO_Class
     real(kind=rp), allocatable :: limsupX(:) , liminfX(:) ! Domain limits to Objective Function
   contains
@@ -44,6 +47,7 @@ module ObjectiveFunction_MOPSO_mod
   end type ObjectiveFunction_MOPSO_Class
 
   interface
+
     subroutine Function_X_implemented(ObjFunc,X,Y) 
       use Precision_defaults_MOPSO_mod
       import :: ObjectiveFunction_MOPSO_Class
@@ -64,8 +68,9 @@ module ObjectiveFunction_MOPSO_mod
       implicit none   
       class(ObjectiveFunction_MOPSO_Class) :: ObjFunc
     end function get_nY_implemented     
+
   end interface
+
 contains
 
 end module ObjectiveFunction_MOPSO_mod
-!++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

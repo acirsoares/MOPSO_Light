@@ -46,7 +46,6 @@ module Swarm_MOPSO_mod
   use ParetoFront_mod  
   use ObjectiveFunction_MOPSO_mod
   use SobolSequence_mod
-
   implicit none
 
   private :: Local_RAND

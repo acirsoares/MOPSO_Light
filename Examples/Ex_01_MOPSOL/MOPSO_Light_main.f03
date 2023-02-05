@@ -1,7 +1,7 @@
 ! @licence GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 ! @date Oct 12, 2022
 ! @author Acir M. Soares Jr. <acir@ufsj.edu.br>
-! @def :  teste - Test example for MOPSOLight Optimization Algorithm
+! @def : test - Test the example for MOPSOLight Optimization Algorithm
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !*****************************************************************************************
 program MOPSO_Light_main
@@ -11,7 +11,7 @@ program MOPSO_Light_main
 !     ==========================
 !      - Precision_defaults_MOPSO_mod
 !      - ParetoFront_EDSD_mod  --> (ParetoFront_mod)
-!      - Swarm_MOPSO_mod --> (SobolSequence_mod)
+!      - Swarm_MOPSO_mod  <-- (SobolSequence_mod)
 !      - MOPSO_Light_mod 
 !      - OF_test1_mod  --> (ObjectiveFunction_MOPSO_mod)
 !      - File_Manager_ParetoFront_mod
@@ -20,10 +20,11 @@ program MOPSO_Light_main
 !     ==========================
 !     Instantiate an ObjectiveFunction_MOPSOL object (OF_test1_Class)
 !     Read MOPSOL parameters (DimensionsMOPSOL_type) 
-!     Call MOPSOLight optimization algorithm 
+!     Call MOPSO_Light optimization algorithm 
 !     Write Pareto Front to a File.
 !
 !***********************************************************************
+
 ! Modules
   use OF_test1_mod  
   use MOPSO_Light_mod
@@ -31,91 +32,99 @@ program MOPSO_Light_main
   use File_Manager_ParetoFront_mod
   implicit none
 
+! Variables
   type(OF_test1_Class), allocatable :: OF !  Objective function object
   type(ParetoFront_EDSD_class), allocatable :: PF
   type(MOPSO_Light_Parameters_type) :: MOPSO_Light_Parameters, Set_MOPSO_Light_Parameters ! Structure that contains MOPSO parameters 
-  integer :: i,nX,nY 
-  integer :: NRs=10  
-  integer :: NTParticles  ! The total particles in the output archive
-  real :: T1,T2 
+  integer :: i
+  integer :: NRs=10                       ! The number of runs 
+  integer :: NTParticles                  ! The total particles in the output archive
+  real :: T1,T2                           ! CPU timer variable
   character (len=10) :: File_id
-  character (len=50) :: File_Name 
-  character (len=50),allocatable :: All_File_Names (:)
-  integer, allocatable :: ALL_nTotal_particles (:)
-  call execute_command_line('clear')
- 
+  character (len=16) :: File_base = 'MOPSOL_test1_'
+  character (len=16) :: Aditional_path = '/results/'
+  character (len=255) :: File_Name        ! complete file name + path
+  character (len=255), allocatable :: All_File_Names (:)    ! A set of file names with resulting Pareto Front
+  character (len=200) :: cwd                 
+  
+  ! get the current working directory path
+  call getcwd(cwd) 
+
+  ! instantiate the objective function object
   allocate(OF)
   OF = OF_test1_Class()
 
-  nx=OF%get_nX() 
-  nY=OF%get_nY() 
-
-  MOPSO_Light_Parameters = Set_MOPSO_Light_Parameters(nY)
+  ! Set parameters for MOPSO_Light algorithm   
+  MOPSO_Light_Parameters = Set_MOPSO_Light_Parameters(OF%get_nY())
 
   ! Initializes the stored solutions counter    
   NTParticles=0
 
+  ! Allocate a Pareto Front 
   allocate (PF)
-  
-  ! * Run the MOPSOL "NRs" times, evaluate the CPU time consuming, 
-  ! *  ordenate Pareto Front in respect to the first objective function, 
-  ! *  and save results in a file. 
 
+  ! Allocate a set of file names  
   allocate (All_File_Names(NRs))
-  allocate (ALL_nTotal_particles(NRs))
-
+  
+  ! *  Run "NRs" times 
   do i=1,NRs
 
+    ! Run MOPSO_Light algorithm and evaluate the CPU time consuming
     call cpu_time(T1)
     PF = MOPSO_Light(OF,MOPSO_Light_Parameters)
     call cpu_time(T2)
 
-    ALL_nTotal_particles(i)=PF%get_NCSP()
-    write(*,"(a,i3,a,2i4)")"Number of particles in the",i,"st  Pareto Front = ", PF%get_NCSP()
+    write(*,"(a,i3,a,2i4)")"Number of particles in the Pareto Front",i," =", PF%get_NCSP()
     write(*,*)"CPU processing time = ", T2-T1
-
     NTParticles=NTParticles+PF%get_NCSP()
 
+    ! Ordenate Pareto Front in respect to the first objective function, 
     call PF%Sort_PFS(1)
 
+    ! Set the file name and the writing results directory path
     if (i.lt.10) then
       write(File_id,"('0',i0)") i
     else
       write(File_id,"(i0)") i
     end if     
-    File_Name='MOPSOL_test1_' // trim(adjustl(file_id)) // '.csv'
+    File_Name=trim(cwd)//trim(Aditional_path)//trim(File_base)//trim(adjustl(file_id))//'.csv'
     All_File_Names(i)=File_Name
+
+    ! *  Save results in a file. 
     call Save_ParetoFront_in_file(PF,File_Name)
 
   end do  
 
   write(*,*) "Particles in all fronts =",NTParticles  
+
+  ! Set a Pareto Front Object to merge all Files
+  PF = ParetoFront_EDSD_class(MOPSO_Light_Parameters%NPFS,OF%get_nX(),OF%get_nY(),MOPSO_Light_Parameters%S_dominance) 
+
+  ! Set the merger file name
+  File_Name=trim(cwd)//trim(Aditional_path)//'MOPSOLight_final.csv'
+
   ! * Merge all Pareto Fronts
-  File_Name='MOPSOLight_final.csv'
-  PF = ParetoFront_EDSD_class(MOPSO_Light_Parameters%NPFS,nX,nY,MOPSO_Light_Parameters%S_dominance) 
-  call Merge_ParetoFront_in_file(PF,NRs,All_File_Names,ALL_nTotal_particles,File_name,NTParticles)
+  call Merge_ParetoFront_in_file(PF,All_File_Names,File_name,NTParticles)
   write(*,*) "Particles in Merged Pareto Front = ",PF%get_NCSP()
 
-  deallocate(ALL_nTotal_particles)
   deallocate(All_File_Names)
   deallocate(PF)  
   deallocate(OF)  
 
-!  call execute_command_line('python3 scatter2d.py')
-!++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 end program MOPSO_Light_main
 
+
+! ** Set_MOPSO_Light_Parameters
+!   Function to set the MOPSO_Light partameters 
 function Set_MOPSO_Light_Parameters(nY) result(MP)
-  use MOPSO_Light_mod
-  
+  use MOPSO_Light_mod  
   implicit none
 
   integer,intent(in):: nY
   type(MOPSO_Light_Parameters_type) :: MP      !     Structure that contains all optimization parameters 
-  
   integer i
 
-  open (UNIT=30,FILE='MOPSO_L_Dimension_Data.txt')
+  open (UNIT=30,FILE='MOPSO_Light_Parameters.txt')
   read(30,*)MP%NPFS              ! Number of storage positions for particles from Pareto's Front
   read(30,*)MP%nSP               ! Number of particles at the swarm
   read(30,*)MP%NITMOPSO          ! Method Iterations
