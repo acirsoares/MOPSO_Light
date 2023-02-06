@@ -42,13 +42,21 @@ program MOPSO_Light_main
   real :: T1,T2                           ! CPU timer variable
   character (len=10) :: File_id
   character (len=16) :: File_base = 'MOPSOL_test1_'
-  character (len=16) :: Aditional_path = '/results/'
+  character (len=16) :: Additional_path = 'results'
   character (len=255) :: File_Name        ! complete file name + path
   character (len=255), allocatable :: All_File_Names (:)    ! A set of file names with resulting Pareto Front
   character (len=200) :: cwd                 
-  
+  logical :: dir_e
+
+  ! Set results directory name
   ! get the current working directory path
   call getcwd(cwd) 
+  ! check whether there is the additional_path directory
+  inquire(file=Additional_path, exist=dir_e)
+  if (.not. dir_e) call execute_command_line ('mkdir -p ' // adjustl(trim( Additional_path ) ) )
+  ! add a left and a right slash to the additional path name
+  Additional_path=adjustl(trim('/'//Additional_path))//'/'
+
 
   ! instantiate the objective function object
   allocate(OF)
@@ -87,7 +95,7 @@ program MOPSO_Light_main
     else
       write(File_id,"(i0)") i
     end if     
-    File_Name=trim(cwd)//trim(Aditional_path)//trim(File_base)//trim(adjustl(file_id))//'.csv'
+    File_Name=trim(cwd)//trim(Additional_path)//trim(File_base)//trim(adjustl(file_id))//'.csv'
     All_File_Names(i)=File_Name
 
     ! *  Save results in a file. 
@@ -101,7 +109,7 @@ program MOPSO_Light_main
   PF = ParetoFront_EDSD_class(MOPSO_Light_Parameters%NPFS,OF%get_nX(),OF%get_nY(),MOPSO_Light_Parameters%S_dominance) 
 
   ! Set the merger file name
-  File_Name=trim(cwd)//trim(Aditional_path)//'MOPSOLight_final.csv'
+  File_Name=trim(cwd)//trim(Additional_path)//'MOPSOLight_final.csv'
 
   ! * Merge all Pareto Fronts
   call Merge_ParetoFront_in_file(PF,All_File_Names,File_name,NTParticles)
