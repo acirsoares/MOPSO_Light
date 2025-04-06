@@ -32,10 +32,6 @@ execute the make file :
 
 	make
 
-optional : (remove ".o" and ".mod" files )
-
-	make clean 
-
 run the .a file :
 
 	./test1.a
