@@ -35,7 +35,7 @@ program MOPSO_Light_main
 ! Variables
   type(OF_test1_Class), allocatable :: OF !  Objective function object
   type(ParetoFront_EDSD_class), allocatable :: PF
-  type(MOPSO_Light_Parameters_type) :: MOPSO_Light_Parameters, Set_MOPSO_Light_Parameters ! Structure that contains MOPSO parameters 
+  type(MOPSO_Light_Parameters_type) :: MOPSO_Light_Parameters ! the structure that contains MOPSO parameters 
   integer :: i
   integer :: NRs=10                       ! The number of runs 
   integer :: NTParticles                  ! The total particles in the output archive
@@ -48,7 +48,9 @@ program MOPSO_Light_main
   character (len=200) :: cwd                 
   logical :: dir_e
 
-  ! Set results directory name
+  call execute_command_line('clear')
+
+  ! Set the result's directory name
   ! get the current working directory path
   call getcwd(cwd) 
   ! check whether there is the additional_path directory
@@ -57,13 +59,12 @@ program MOPSO_Light_main
   ! add a left and a right slash to the additional path name
   Additional_path=adjustl(trim('/'//Additional_path))//'/'
 
-
-  ! instantiate the objective function object
+  ! instantiate the Objective Function object
   allocate(OF)
   OF = OF_test1_Class()
 
   ! Set parameters for MOPSO_Light algorithm   
-  MOPSO_Light_Parameters = Set_MOPSO_Light_Parameters(OF%get_nY())
+  call Set_MOPSO_Light_Parameters(OF%get_nY(),MOPSO_Light_Parameters,"MOPSO_Light_Parameters.txt")
 
   ! Initializes the stored solutions counter    
   NTParticles=0
@@ -115,37 +116,11 @@ program MOPSO_Light_main
   call Merge_ParetoFront_in_file(PF,All_File_Names,File_name,NTParticles)
   write(*,*) "Particles in Merged Pareto Front = ",PF%get_NCSP()
 
+  call execute_command_line('python3 test1_2D_Plot.py')
+
   deallocate(All_File_Names)
   deallocate(PF)  
   deallocate(OF)  
 
 end program MOPSO_Light_main
 
-
-! ** Set_MOPSO_Light_Parameters
-!   Function to set the MOPSO_Light partameters 
-function Set_MOPSO_Light_Parameters(nY) result(MP)
-  use MOPSO_Light_mod  
-  implicit none
-
-  integer,intent(in):: nY
-  type(MOPSO_Light_Parameters_type) :: MP      !     Structure that contains all optimization parameters 
-  integer i
-
-  open (UNIT=30,FILE='MOPSO_Light_Parameters.txt')
-  read(30,*)MP%NPFS              ! Number of storage positions for particles from Pareto's Front
-  read(30,*)MP%nSP               ! Number of particles at the swarm
-  read(30,*)MP%NITMOPSO          ! Method Iterations
-  read(30,*)MP%Random            ! Logical .True. or .False. to set random function
-  read(30,*)MP%NIM               ! Code number to initialize swarm particles POSITION (P) and VELOCITY (V)  (1) P=RANDOM V=0; (2) P=SOBOL(max of NX=6 dimensions) V=0;(3) P=RANDOM V=RANDOM;(4) P=SOBOL V=RANDOM.
-  read(30,*)MP%NFI1_4            ! Number of fixed interations on the first quarter
-  read(30,*)MP%NFI2_4            ! Number of fixed interations on the second quarter
-  read(30,*)MP%NFI2_2            ! Number of fixed interations on the second half
-  allocate (MP%S_dominance(ny))
-  do i = 1 , nY
-    read(30,*)MP%S_dominance(i)
-  end do
-  close (UNIT=30, STATUS='KEEP')
-
-  return
-end function Set_MOPSO_Light_Parameters

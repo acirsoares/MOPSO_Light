@@ -16,6 +16,7 @@ MOPSO_Light_make:
 	$(CC) -c OF_test1_mod.f03
 	$(CC) -c MOPSO_Light_main.f03
 	$(CC) -o test1.a $(objlib) OF_test1_mod.o MOPSO_Light_main.o
+	make clean
 
 .PHONY: clean
 

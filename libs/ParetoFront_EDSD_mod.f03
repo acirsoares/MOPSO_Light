@@ -5,7 +5,7 @@
 !
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! ***************************************************************************************
-! ***ParetoFront_EDSD_mod - Class (general) (Version 1.0)
+! ***ParetoFront_EDSD_mod - Class (general) (Version 1.1)
 ! ***************************************************************************************
 ! *** Object Description:
 ! *  A set of Pareto solution elements stored in an allocatable vector "PFS(:)"
@@ -159,8 +159,6 @@ contains
     implicit none
 
     type(ParetoFront_EDSD_class) :: PF
-
-    deallocate  (PF%PFS_EDSD)
 
     return
   end subroutine DESTRUCTOR_ParetoFront_EDSD_class
@@ -395,7 +393,7 @@ contains
 
     !  Tests if the entering point dominates any stored point at 
     !  Pareto Front (PFS). If true, then it eliminates the old position  
-    !  by overlapping it with the values of the PFS end position.
+    !  by overlapping it with the values of the PFS end position and shrinking the PFS in a unity
     ie=0
     do i = 1,PF%NCSP_EDSD
       ia=i-ie           ! ia corresponds to the current i value
@@ -471,10 +469,16 @@ contains
         do i=2,PF%minD%C-1         
          if (PF%PFS_EDSD(PF%minD%C)%d(i).LT.smd) smd=PF%PFS_EDSD(PF%minD%C)%d(i)
         end do
-        do i=PF%minD%C+1,PF%NCSP_EDSD     
+        do i=PF%minD%C+1,PF%minD%L-1     
           if (PF%PFS_EDSD(i)%d(PF%minD%C).LT.smd) smd=PF%PFS_EDSD(i)%d(PF%minD%C)
         end do
-        do i=1,PF%minD%L-1         
+        do i=PF%minD%L+1,PF%NCSP_EDSD     
+          if (PF%PFS_EDSD(i)%d(PF%minD%C).LT.smd) smd=PF%PFS_EDSD(i)%d(PF%minD%C)
+        end do
+        do i=1,PF%minD%C-1         
+          if (PF%PFS_EDSD(PF%minD%L)%d(i).LT.smd) GOTO 60
+        end do
+        do i=PF%minD%C+1,PF%minD%L-1         
           if (PF%PFS_EDSD(PF%minD%L)%d(i).LT.smd) GOTO 60
         end do
         do i=PF%minD%L+1,PF%NCSP_EDSD     

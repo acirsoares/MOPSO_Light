@@ -1,4 +1,4 @@
-80      ! NPFS          = Number of storage positions for particles at Pareto's Front
+75      ! NPFS          = Number of storage positions for particles at Pareto's Front
 100     ! nPS           = Number of particles at the swarm
 100     ! NITMOPSO      = Number of MOPSO_Light iterations
 .false. ! LRandom       = Random number method (.true. = CPU time-dependent , .false. = CPU time-independent )
@@ -6,8 +6,8 @@
 3		! NFI1_4 the number of fixed leadersheap itetarions at the first quarter
 5       ! NFI2_4 the number of fixed leadersheap itetarions at the second quarter
 8       ! NFI2_2 the number of fixed leadersheap itetarions at the second half
-0.005   ! e-dominance (positive values)
-0.005   ! e-dominance (positive values)
+0.0025   ! e-dominance (positive values)
+0.0025   ! e-dominance (positive values)
 
 OBS:
 

@@ -13,7 +13,7 @@ def read_Pareto_Front_In_File(filename):
     x2 = []
     
     with open(filename) as csvDataFile:
-        csvReader = csv.reader(csvDataFile,delimiter=';')
+        csvReader = csv.reader(csvDataFile,delimiter=',')
         for row in csvReader:
             y1.append(row[0])
             y2.append(row[1])

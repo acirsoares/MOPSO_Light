@@ -4,7 +4,7 @@
 ! @def :  MOPSO_Light: multi-objective optimization algorithm based on PSO (Particle Swarm Optimization)
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! ***************************************************************************************
-! *** MOPSOLight_mod.f03 (Version 1.0)  
+! *** MOPSOLight_mod.f03 (Version 1.1)  
 ! ***************************************************************************************
 ! *** Algorithm Application:
 ! *     MOPSO_Light returns a Pareto Multidimensional Front applying the PSO 
@@ -73,7 +73,7 @@ module MOPSO_Light_mod
 
   private Local_RAND
 
-  public MOPSO_Light_Parameters_type, MOPSO_Light
+  public MOPSO_Light_Parameters_type, MOPSO_Light, Set_MOPSO_Light_Parameters
 
   ! ** STRUCTURES 
   type,public :: MOPSO_Light_Parameters_type
@@ -89,6 +89,33 @@ module MOPSO_Light_mod
   end type MOPSO_Light_Parameters_type
 
 contains
+
+  subroutine Set_MOPSO_Light_Parameters(nY,MP,ParametersFileName)
+      implicit none
+
+  integer,intent(in):: nY
+  type(MOPSO_Light_Parameters_type) :: MP      !     The structure that contains all optimization parameters 
+  character (len=*), intent(in) :: ParametersFileName     !     The file name that contains the MOPSO parameters.
+  integer i
+    open (UNIT=30,FILE=ParametersFileName)
+    read(30,*)MP%NPFS              ! Number of storage positions for particles from Pareto's Front
+    read(30,*)MP%nSP               ! Number of particles at the swarm
+    read(30,*)MP%NITMOPSO          ! Method Iterations
+    read(30,*)MP%Random            ! Logical .True. or .False. to set random function
+    read(30,*)MP%NIM               ! Code number to initialize swarm particles POSITION (P) and VELOCITY (V)  (1) P=RANDOM V=0; (2) P=SOBOL(max of NX=6 dimensions) V=0;(3) P=RANDOM V=RANDOM;(4) P=SOBOL V=RANDOM.
+    read(30,*)MP%NFI1_4            ! Number of fixed interations on the first quarter
+    read(30,*)MP%NFI2_4            ! Number of fixed interations on the second quarter
+    read(30,*)MP%NFI2_2            ! Number of fixed interations on the second half
+    allocate (MP%S_dominance(ny))
+    do i = 1 , nY
+      read(30,*)MP%S_dominance(i)
+    end do
+    close (UNIT=30, STATUS='KEEP')
+
+    return
+  end subroutine Set_MOPSO_Light_Parameters
+
+
 
   function MOPSO_Light (OF,MLP,PFin) result(PF)
     implicit none
